@@ -10,10 +10,18 @@
       background-color: #87CEEB;
       color: #333;
       padding: 20px;
+      text-align: center;
     }
 
-    h2 {
-      text-align: center;
+    #contenido {
+      display: none;
+      text-align: left;
+    }
+
+    input[type="password"] {
+      padding: 10px;
+      font-size: 1em;
+      margin-top: 10px;
     }
 
     .container {
@@ -83,55 +91,75 @@
   </style>
 </head>
 <body>
-  <h2>📅 Mi Agenda (con Guardado)</h2>
-  <div class="container">
-    <!-- Calendario -->
-    <div class="calendar">
-      <h3>Calendario - Mayo 2025</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-          </tr>
-        </thead>
-        <tbody id="calendar-body">
-          <!-- JS inserta el calendario aquí -->
-        </tbody>
-      </table>
-      <div class="event-form">
-        <h4>Agregar Evento</h4>
-        <input type="date" id="event-date">
-        <input type="text" id="event-text" placeholder="Descripción del evento">
-        <button onclick="addEvent()">Agregar</button>
-        <ul id="event-list"></ul>
-      </div>
-    </div>
 
-    <!-- Notas y tareas -->
-    <div>
-      <div class="notes">
-        <h3>📝 Notas</h3>
-        <textarea id="notes-area" placeholder="Escribe tus notas aquí..."></textarea>
+  <h2>🔐 Acceso restringido</h2>
+  <p>Introduce la contraseña para acceder a la agenda:</p>
+  <input type="password" id="password" placeholder="Contraseña">
+  <button onclick="verificar()">Entrar</button>
+
+  <div id="contenido">
+    <h2>📅 Mi Agenda (con Guardado)</h2>
+    <div class="container">
+      <div class="calendar">
+        <h3>Calendario - Mayo 2025</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
+            </tr>
+          </thead>
+          <tbody id="calendar-body"></tbody>
+        </table>
+        <div class="event-form">
+          <h4>Agregar Evento</h4>
+          <input type="date" id="event-date">
+          <input type="text" id="event-text" placeholder="Descripción del evento">
+          <button onclick="addEvent()">Agregar</button>
+          <ul id="event-list"></ul>
+        </div>
       </div>
 
-      <div class="todo">
-        <h3>✅ Tareas Pendientes</h3>
-        <input type="text" id="task-input" placeholder="Nueva tarea">
-        <button onclick="addTask()">Añadir</button>
-        <ul id="task-list"></ul>
+      <div>
+        <div class="notes">
+          <h3>📝 Notas</h3>
+          <textarea id="notes-area" placeholder="Escribe tus notas aquí..."></textarea>
+        </div>
+        <div class="todo">
+          <h3>✅ Tareas Pendientes</h3>
+          <input type="text" id="task-input" placeholder="Nueva tarea">
+          <button onclick="addTask()">Añadir</button>
+          <ul id="task-list"></ul>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    // -------- Calendario --------
+    function verificar() {
+      const claveCorrecta = "15082010zily"; // 🔒 CAMBIA AQUÍ TU CONTRASEÑA
+      const input = document.getElementById("password").value;
+      if (input === claveCorrecta) {
+        document.getElementById("contenido").style.display = "block";
+        document.getElementById("password").style.display = "none";
+        event.target.style.display = "none";
+        document.querySelector("p").style.display = "none";
+        document.querySelector("h2").textContent = "Acceso concedido";
+        // Iniciar funciones
+        generateCalendar();
+        loadEvents();
+        loadNotes();
+        loadTasks();
+      } else {
+        alert("Contraseña incorrecta");
+      }
+    }
+
     function generateCalendar() {
-      const firstDay = new Date(2025, 4, 1).getDay(); // Mayo 2025
+      const firstDay = new Date(2025, 4, 1).getDay();
       const daysInMonth = 31;
       const calendarBody = document.getElementById("calendar-body");
       calendarBody.innerHTML = "";
       let date = 1;
-
       for (let i = 0; i < 6; i++) {
         const row = document.createElement("tr");
         for (let j = 0; j < 7; j++) {
@@ -150,7 +178,6 @@
       }
     }
 
-    // -------- Eventos --------
     function loadEvents() {
       const events = JSON.parse(localStorage.getItem("events") || "[]");
       const list = document.getElementById("event-list");
@@ -175,16 +202,16 @@
       }
     }
 
-    // -------- Notas --------
     function loadNotes() {
       document.getElementById("notes-area").value = localStorage.getItem("notes") || "";
     }
 
-    document.getElementById("notes-area").addEventListener("input", function () {
-      localStorage.setItem("notes", this.value);
+    document.addEventListener("input", function (e) {
+      if (e.target.id === "notes-area") {
+        localStorage.setItem("notes", e.target.value);
+      }
     });
 
-    // -------- Tareas --------
     function loadTasks() {
       const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
       const list = document.getElementById("task-list");
@@ -214,12 +241,6 @@
       localStorage.setItem("tasks", JSON.stringify(tasks));
       loadTasks();
     }
-
-    // -------- Inicializar --------
-    generateCalendar();
-    loadEvents();
-    loadNotes();
-    loadTasks();
   </script>
 </body>
 </html>
