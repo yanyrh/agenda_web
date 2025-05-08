@@ -2,39 +2,53 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Agenda con Guardado</title>
+  <title>Agenda Personal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #87CEEB;
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to right, #fbc2eb, #a6c1ee);
       color: #333;
       padding: 20px;
+    }
+
+    h2 {
       text-align: center;
-    }
-
-    #contenido {
-      display: none;
-      text-align: left;
-    }
-
-    input[type="password"] {
-      padding: 10px;
-      font-size: 1em;
-      margin-top: 10px;
+      font-weight: 600;
+      margin-bottom: 30px;
     }
 
     .container {
       display: grid;
       grid-template-columns: 2fr 1fr;
       gap: 20px;
+      max-width: 1200px;
+      margin: auto;
     }
 
-    .calendar, .notes, .todo {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .calendar, .notes, .todo, .backup, .class-stats {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    
+    .calendar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .calendar-controls button {
+      padding: 6px 12px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
     }
 
     table {
@@ -45,202 +59,555 @@
     th, td {
       padding: 10px;
       text-align: center;
-      border: 1px solid #ccc;
+      border: 1px solid #eee;
+      transition: background 0.3s;
+      position: relative;
     }
 
-    .event-form input {
-      width: 100%;
-      padding: 5px;
-      margin-top: 5px;
+    td.today {
+      background-color: #ffeb3b;
     }
 
-    .notes textarea {
-      width: 100%;
-      height: 150px;
-      padding: 10px;
-    }
-
-    .todo input[type="text"] {
-      width: 80%;
-      padding: 5px;
-    }
-
-    .todo ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .todo li {
-      display: flex;
-      justify-content: space-between;
-      margin: 5px 0;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
+    td.has-event {
+      background-color: #81c784;
       cursor: pointer;
     }
 
-    button:hover {
-      background-color: #45a049;
+    td .class-count {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background-color: #e91e63;
+      color: white;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+
+    input[type="text"], input[type="date"], input[type="number"] {
+      width: calc(100% - 22px);
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 8px 10px;
+      margin-top: 5px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    ul {
+      padding-left: 0;
+      list-style-type: none;
+    }
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0;
+      padding: 8px;
+      background-color: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    li span.task-text {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+
+    li span.task-completed {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    li .actions button {
+      padding: 4px 8px;
+      margin-left: 5px;
+    }
+    
+    li button.remove-btn {
+      background-color: #e74c3c;
+    }
+    li button.complete-btn {
+      background-color: #2ecc71;
+    }
+    li button.pending-btn {
+      background-color: #f39c12;
+    }
+
+    .backup input[type="file"] {
+      margin-top: 10px;
+      width: calc(100% - 22px);
+      box-sizing: border-box;
+    }
+
+    .backup button {
+      margin: 5px 5px 0 0;
+    }
+
+    .class-stats .toggle-btn {
+      background-color: #9c27b0;
+      margin-bottom: 10px;
+    }
+
+    .class-stats .content {
+      display: block;
+    }
+
+    .class-stats .content.hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-
-  <h2>🔐 Acceso restringido</h2>
-  <p>Introduce la contraseña para acceder a la agenda:</p>
-  <input type="password" id="password" placeholder="Contraseña">
-  <button onclick="verificar()">Entrar</button>
-
-  <div id="contenido">
-    <h2>📅 Mi Agenda (con Guardado)</h2>
-    <div class="container">
-      <div class="calendar">
-        <h3>Calendario - Mayo 2025</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-            </tr>
-          </thead>
-          <tbody id="calendar-body"></tbody>
-        </table>
-        <div class="event-form">
-          <h4>Agregar Evento</h4>
-          <input type="date" id="event-date">
-          <input type="text" id="event-text" placeholder="Descripción del evento">
-          <button onclick="addEvent()">Agregar</button>
-          <ul id="event-list"></ul>
-        </div>
-      </div>
-
-      <div>
-        <div class="notes">
-          <h3>📝 Notas</h3>
-          <textarea id="notes-area" placeholder="Escribe tus notas aquí..."></textarea>
-        </div>
-        <div class="todo">
-          <h3>✅ Tareas Pendientes</h3>
-          <input type="text" id="task-input" placeholder="Nueva tarea">
-          <button onclick="addTask()">Añadir</button>
-          <ul id="task-list"></ul>
-        </div>
-      </div>
+<h2>📔 Agenda Personal</h2>
+<div class="container">
+  <div class="calendar">
+    <div class="calendar-controls">
+      <button onclick="changeMonth(-1)">⬅️</button>
+      <h3 id="month-year"></h3>
+      <button onclick="changeMonth(1)">➡️</button>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Dom</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th></tr>
+      </thead>
+      <tbody id="calendar-body"></tbody>
+    </table>
+    <div class="event-form">
+      <h4>📌 Agregar Evento</h4>
+      <input type="date" id="event-date">
+      <input type="text" id="event-text" placeholder="Descripción del evento">
+      <button onclick="addEvent()">Agregar</button>
+      <ul id="event-list"></ul>
+    </div>
+    <div class="class-form">
+      <h4>🎓 Registrar Clases (Mar/Mié/Jue)</h4>
+      <input type="date" id="class-date">
+      <input type="number" id="class-count" min="1" placeholder="Número de clases">
+      <button onclick="addClass()">Registrar</button>
+      <ul id="class-list"></ul>
     </div>
   </div>
 
-  <script>
-    function verificar() {
-      const claveCorrecta = "15082010zily"; // 🔒 CAMBIA AQUÍ TU CONTRASEÑA
-      const input = document.getElementById("password").value;
-      if (input === claveCorrecta) {
-        document.getElementById("contenido").style.display = "block";
-        document.getElementById("password").style.display = "none";
-        event.target.style.display = "none";
-        document.querySelector("p").style.display = "none";
-        document.querySelector("h2").textContent = "Acceso concedido";
-        // Iniciar funciones
-        generateCalendar();
+  <div>
+    <div class="notes">
+      <h3>📝 Notas</h3>
+      <input type="text" id="note-input" placeholder="Nueva nota">
+      <button onclick="addNote()">Añadir Nota</button>
+      <ul id="notes-list"></ul>
+    </div>
+
+    <div class="todo">
+      <h3>✅ Tareas</h3>
+      <input type="text" id="task-input" placeholder="Nueva tarea">
+      <button onclick="addTask()">Añadir</button>
+      <ul id="task-list"></ul>
+    </div>
+
+    <div class="class-stats">
+      <h3>📊 Estadísticas de Clases</h3>
+      <button class="toggle-btn" onclick="toggleClassStats()">Ocultar/Mostrar</button>
+      <div class="content" id="class-stats-content">
+        <p>Total de clases registradas: <span id="total-class-count">0</span> clases</p>
+      </div>
+    </div>
+
+    <div class="backup">
+      <h3>💾 Respaldo</h3>
+      <button onclick="backupData()">Respaldar</button>
+      <input type="file" id="backup-file" accept=".json">
+      <button onclick="restoreData()">Restaurar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentDate = new Date();
+let currentMonth = currentDate.getMonth();
+let currentYear = currentDate.getFullYear();
+const HOURS_PER_CLASS = 2; // Duración de cada clase en horas (ajustable)
+
+function generateCalendar(month, year) {
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const calendarBody = document.getElementById("calendar-body");
+  const monthYearText = document.getElementById("month-year");
+  calendarBody.innerHTML = "";
+
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  monthYearText.textContent = `${monthNames[month]} ${year}`;
+
+  const events = JSON.parse(localStorage.getItem("events") || "[]");
+  const classes = JSON.parse(localStorage.getItem("classes") || "[]");
+  let date = 1;
+
+  for (let i = 0; i < 6; i++) {
+    const row = document.createElement("tr");
+    for (let j = 0; j < 7; j++) {
+      const cell = document.createElement("td");
+      if (i === 0 && j < firstDay) {
+        cell.textContent = "";
+      } else if (date > daysInMonth) {
+        break;
+      } else {
+        cell.textContent = date;
+        const dateStr = `${year}-${(month+1).toString().padStart(2, '0')}-${date.toString().padStart(2, '0')}`;
+        const today = new Date();
+        if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
+          cell.classList.add("today");
+        }
+        if (events.some(e => e.date === dateStr)) {
+          cell.classList.add("has-event");
+          cell.onclick = () => displayEventsForDate(dateStr);
+          const dayEvents = events.filter(e => e.date === dateStr).map(e => e.text).join(', ');
+          if (dayEvents) cell.title = dayEvents;
+        }
+
+        // Mostrar número de clases en martes (j=2), miércoles (j=3) y jueves (j=4)
+        if (j === 2 || j === 3 || j === 4) {
+          const classEntry = classes.find(c => c.date === dateStr);
+          if (classEntry && classEntry.count > 0) {
+            const countSpan = document.createElement("span");
+            countSpan.className = "class-count";
+            countSpan.textContent = classEntry.count;
+            cell.appendChild(countSpan);
+          }
+        }
+        date++;
+      }
+      row.appendChild(cell);
+    }
+    calendarBody.appendChild(row);
+    if (date > daysInMonth) break;
+  }
+}
+
+function displayEventsForDate(dateStr) {
+  const events = JSON.parse(localStorage.getItem("events") || "[]");
+  const eventsOfTheDay = events.filter(e => e.date === dateStr);
+  if (eventsOfTheDay.length > 0) {
+    const eventTexts = eventsOfTheDay.map(e => e.text).join("\n - ");
+    alert(`Eventos para ${dateStr}:\n - ${eventTexts}`);
+  } else {
+    alert(`No hay eventos para ${dateStr}.`);
+  }
+}
+
+function changeMonth(offset) {
+  currentMonth += offset;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  } else if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  }
+  generateCalendar(currentMonth, currentYear);
+}
+
+function loadEvents() {
+  const events = JSON.parse(localStorage.getItem("events") || "[]");
+  const list = document.getElementById("event-list");
+  list.innerHTML = "";
+  events.forEach((ev, index) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="task-text">${ev.date}: ${ev.text}</span> <div class="actions"><button class="remove-btn" onclick="removeEvent(${index})">✖</button></div>`;
+    list.appendChild(li);
+  });
+  generateCalendar(currentMonth, currentYear);
+}
+
+function addEvent() {
+  const dateInput = document.getElementById("event-date");
+  const textInput = document.getElementById("event-text");
+  const date = dateInput.value;
+  const text = textInput.value.trim();
+  if (date && text) {
+    const events = JSON.parse(localStorage.getItem("events") || "[]");
+    events.push({ date, text });
+    localStorage.setItem("events", JSON.stringify(events));
+    loadEvents();
+    dateInput.value = "";
+    textInput.value = "";
+  } else {
+    alert("Por favor, completa la fecha y la descripción del evento.");
+  }
+}
+
+function removeEvent(index) {
+  const events = JSON.parse(localStorage.getItem("events") || "[]");
+  events.splice(index, 1);
+  localStorage.setItem("events", JSON.stringify(events));
+  loadEvents();
+}
+
+// Funciones para clases
+function loadClasses() {
+  const classes = JSON.parse(localStorage.getItem("classes") || "[]");
+  const list = document.getElementById("class-list");
+  list.innerHTML = "";
+  classes.forEach((cls, index) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="task-text">${cls.date}: ${cls.count} clases</span> <div class="actions"><button class="remove-btn" onclick="removeClass(${index})">✖</button></div>`;
+    list.appendChild(li);
+  });
+  updateClassStats();
+  generateCalendar(currentMonth, currentYear);
+}
+
+function addClass() {
+  const dateInput = document.getElementById("class-date");
+  const countInput = document.getElementById("class-count");
+  const date = dateInput.value;
+  const count = parseInt(countInput.value);
+
+  if (!date) {
+    alert("Por favor, selecciona una fecha válida.");
+    return;
+  }
+  if (isNaN(count) || count < 1) {
+    alert("Por favor, ingresa un número de clases mayor a 0.");
+    return;
+  }
+
+
+
+  const classes = JSON.parse(localStorage.getItem("classes") || "[]");
+  const existing = classes.find(c => c.date === date);
+  if (existing) {
+    existing.count += count;
+  } else {
+    classes.push({ date, count });
+  }
+  localStorage.setItem("classes", JSON.stringify(classes));
+  loadClasses();
+  setTimeout(() => {
+    showReminder(`Tienes clases programadas hoy (${date})`);
+  }, 3000);
+  dateInput.value = "";
+  countInput.value = "";
+}
+
+function removeClass(index) {
+  const classes = JSON.parse(localStorage.getItem("classes") || "[]");
+  classes.splice(index, 1);
+  localStorage.setItem("classes", JSON.stringify(classes));
+  loadClasses();
+  setTimeout(() => {
+    showReminder(`Tienes clases programadas hoy (${date})`);
+  }, 3000);
+}
+
+function updateClassStats() {
+  const classes = JSON.parse(localStorage.getItem("classes") || "[]");
+  const totalClasses = classes.reduce((sum, cls) => sum + cls.count, 0);
+  document.getElementById("total-class-count").textContent = totalClasses;
+}
+
+function toggleClassStats() {
+  const content = document.getElementById("class-stats-content");
+  content.classList.toggle("hidden");
+}
+
+// Funciones de Notas
+function loadNotes() {
+  const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+  const list = document.getElementById("notes-list");
+  list.innerHTML = "";
+  notes.forEach((note, i) => {
+    const li = document.createElement("li");
+    li.innerHTML = `<span class="task-text">${note}</span> <div class="actions"><button class="remove-btn" onclick="removeNote(${i})">✖</button></div>`;
+    list.appendChild(li);
+  });
+}
+
+function addNote() {
+  const input = document.getElementById("note-input");
+  const note = input.value.trim();
+  if (note) {
+    const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+    notes.push(note);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    input.value = "";
+    loadNotes();
+  } else {
+    alert("Por favor, escribe algo en la nota.");
+  }
+}
+
+function removeNote(index) {
+  const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+  notes.splice(index, 1);
+  localStorage.setItem("notes", JSON.stringify(notes));
+  loadNotes();
+}
+
+// Funciones de Tareas
+function loadTasks() {
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  const list = document.getElementById("task-list");
+  list.innerHTML = "";
+  tasks.forEach((task, i) => {
+    const li = document.createElement("li");
+    const textSpan = document.createElement("span");
+    textSpan.textContent = task.text;
+    textSpan.className = "task-text";
+    if (task.completed) {
+      textSpan.classList.add("task-completed");
+    }
+    
+    const actionsDiv = document.createElement("div");
+    actionsDiv.className = "actions";
+
+    const completeButton = document.createElement("button");
+    completeButton.textContent = task.completed ? "Pendiente" : "Completar";
+    completeButton.className = task.completed ? "pending-btn" : "complete-btn";
+    completeButton.onclick = () => toggleTaskCompleted(i);
+    
+    const removeButton = document.createElement("button");
+    removeButton.textContent = "✖";
+    removeButton.className = "remove-btn";
+    removeButton.onclick = () => removeTask(i);
+
+    actionsDiv.appendChild(completeButton);
+    actionsDiv.appendChild(removeButton);
+    
+    li.appendChild(textSpan);
+    li.appendChild(actionsDiv);
+    list.appendChild(li);
+  });
+}
+
+function addTask() {
+  const input = document.getElementById("task-input");
+  const text = input.value.trim();
+  if (text) {
+    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+    tasks.push({ text: text, completed: false });
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    input.value = "";
+    loadTasks();
+  } else {
+    alert("Por favor, escribe una tarea.");
+  }
+}
+
+function removeTask(index) {
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  tasks.splice(index, 1);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  loadTasks();
+}
+
+function toggleTaskCompleted(index) {
+  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+  if (tasks[index]) {
+    tasks[index].completed = !tasks[index].completed;
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    loadTasks();
+  }
+}
+
+// Funciones de Respaldo
+function backupData() {
+  const data = {
+    events: JSON.parse(localStorage.getItem("events") || "[]"),
+    notes: JSON.parse(localStorage.getItem("notes") || "[]"),
+    tasks: JSON.parse(localStorage.getItem("tasks") || "[]"),
+    classes: JSON.parse(localStorage.getItem("classes") || "[]")
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "agenda_backup.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  alert("Respaldo generado: agenda_backup.json");
+}
+
+function restoreData() {
+  const fileInput = document.getElementById("backup-file");
+  const file = fileInput.files[0];
+  if (!file) {
+    alert("Selecciona un archivo de respaldo (.json)");
+    return;
+  }
+  if (file.type !== "application/json") {
+    alert("El archivo debe ser de tipo .json");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data && typeof data.events !== 'undefined' && typeof data.notes !== 'undefined' && typeof data.tasks !== 'undefined' && typeof data.classes !== 'undefined') {
+        localStorage.setItem("events", JSON.stringify(data.events || []));
+        localStorage.setItem("notes", JSON.stringify(data.notes || []));
+        localStorage.setItem("tasks", JSON.stringify(data.tasks || []));
+        localStorage.setItem("classes", JSON.stringify(data.classes || []));
+        
         loadEvents();
         loadNotes();
         loadTasks();
+        loadClasses();
+  setTimeout(() => {
+    showReminder(`Tienes clases programadas hoy (${date})`);
+  }, 3000);
+        alert("Datos restaurados correctamente.");
       } else {
-        alert("Contraseña incorrecta");
+        alert("Archivo de respaldo inválido o corrupto. No contiene la estructura esperada.");
       }
+    } catch (error) {
+      alert("Error al leer o procesar el archivo de respaldo: " + error.message);
+      console.error("Error en restoreData:", error);
     }
+  };
+  reader.onerror = function() {
+    alert("No se pudo leer el archivo.");
+  };
+  reader.readAsText(file);
+  fileInput.value = "";
+}
 
-    function generateCalendar() {
-      const firstDay = new Date(2025, 4, 1).getDay();
-      const daysInMonth = 31;
-      const calendarBody = document.getElementById("calendar-body");
-      calendarBody.innerHTML = "";
-      let date = 1;
-      for (let i = 0; i < 6; i++) {
-        const row = document.createElement("tr");
-        for (let j = 0; j < 7; j++) {
-          const cell = document.createElement("td");
-          if (i === 0 && j < firstDay) {
-            cell.innerHTML = "";
-          } else if (date > daysInMonth) {
-            break;
-          } else {
-            cell.innerHTML = date;
-            date++;
-          }
-          row.appendChild(cell);
-        }
-        calendarBody.appendChild(row);
-      }
-    }
-
-    function loadEvents() {
-      const events = JSON.parse(localStorage.getItem("events") || "[]");
-      const list = document.getElementById("event-list");
-      list.innerHTML = "";
-      events.forEach(ev => {
-        const li = document.createElement("li");
-        li.textContent = `${ev.date}: ${ev.text}`;
-        list.appendChild(li);
-      });
-    }
-
-    function addEvent() {
-      const date = document.getElementById("event-date").value;
-      const text = document.getElementById("event-text").value;
-      if (date && text) {
-        const events = JSON.parse(localStorage.getItem("events") || "[]");
-        events.push({ date, text });
-        localStorage.setItem("events", JSON.stringify(events));
-        loadEvents();
-        document.getElementById("event-date").value = "";
-        document.getElementById("event-text").value = "";
-      }
-    }
-
-    function loadNotes() {
-      document.getElementById("notes-area").value = localStorage.getItem("notes") || "";
-    }
-
-    document.addEventListener("input", function (e) {
-      if (e.target.id === "notes-area") {
-        localStorage.setItem("notes", e.target.value);
-      }
+// Inicialización
+document.addEventListener('DOMContentLoaded', () => {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      console.log("Permiso de notificación:", permission);
     });
+  }
+  generateCalendar(currentMonth, currentYear);
+  loadEvents();
+  loadNotes();
+  loadTasks();
+  loadClasses();
+  setTimeout(() => {
+    showReminder(`Tienes clases programadas hoy (${date})`);
+  }, 3000);
+});
 
-    function loadTasks() {
-      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-      const list = document.getElementById("task-list");
-      list.innerHTML = "";
-      tasks.forEach((task, i) => {
-        const li = document.createElement("li");
-        li.innerHTML = `${task} <button onclick="removeTask(${i})">Eliminar</button>`;
-        list.appendChild(li);
-      });
-    }
-
-    function addTask() {
-      const input = document.getElementById("task-input");
-      const task = input.value.trim();
-      if (task) {
-        const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-        tasks.push(task);
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-        input.value = "";
-        loadTasks();
-      }
-    }
-
-    function removeTask(index) {
-      const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-      tasks.splice(index, 1);
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-      loadTasks();
-    }
-  </script>
+function showReminder(message) {
+  if (Notification.permission === "granted") {
+    new Notification("⏰ Recordatorio", {
+      body: message,
+      icon: "https://cdn-icons-png.flaticon.com/512/1827/1827392.png"
+    });
+  }
+}
+</script>
 </body>
 </html>
